@@ -2,6 +2,12 @@
 // <!-- JS CODE BELOW -->
     const quoteDisplayer = document.getElementById('quoteDisplay');
     const showQuoteBtn = document.getElementById('newQuote');
+    const formContainer = document.getElementById('formContainer')
+
+
+    // **CRITICAL FIX:** Global variables to hold the DYNAMICALLY CREATED input elements.
+    let newQuoteTextElement; // Renamed to avoid confusion with the value
+    let newQuoteCategoryElement; // Renamed to avoid confusion with the value
 
     // array of quotes as object
     const quotes = [ 
@@ -14,6 +20,11 @@
     ];        
     // show random quote function
     function showRandomQuote(){
+        // 
+        if (quotes.length === 0) {
+            quoteDisplayer.innerHTML = '<p>No quotes available. Add one!</p>';
+            return;
+        }
 
         // 1. Calculate a NEW random index every time the function runs
         let quoteIndex = Math.floor(Math.random() * quotes.length);
@@ -31,29 +42,15 @@
         
     };
 
-    // ERROR: showQuoteBtn.addEventListener('click', showRandomQuote());
-    // PROBELM ABOVE: 
-    // When JavaScript sees showRandomQuote(), it runs the function once and passes the function's return value (which is undefined) to the listener. The button then does nothing on future clicks.
-    // The Correct Approach: Passing a Reference
-    // You must pass the name of the function (a reference) without parentheses. This tells the event listener: "When the click happens, execute this function."
-    showQuoteBtn.addEventListener('click', showRandomQuote);
-    showQuoteBtn.addEventListener('click', function() {
-        console.log('hello')});
-
-    //Now call the function on load
-    // showRandomQuote();
-
     // ---------------------------------------------
 
-    // 2. Adding Use Input Quote
-    const newQuoteText = document.getElementById('newQuoteText');
-    const newQuoteCategory = document.getElementById('newQuoteCategory');
-
     function addQuote() {
-
         // 1. getting the value the user put into the form and store them in vars
-        let userQuoteText = newQuoteText.value.trim();;
-        let userQuoteCat = newQuoteCategory.value.trim();;
+        // **CRITICAL:** Use local variables to store the STRING value. 
+        // Read from the global element references (newQuoteTextElement).
+
+        const userQuoteText = newQuoteTextElement.value.trim();;
+        const userQuoteCat = newQuoteCategoryElement.value.trim();;
 
         // 1.1 making sure the input is not empty
         if ( userQuoteText === '' || userQuoteCat === '') {
@@ -77,7 +74,44 @@
         quotes.push(newQuoteObject);
 
         // 5. cleaning the input fields
-        newQuoteText.value = '';
-        newQuoteCategory.value = '';
+        newQuoteTextElement.value = '';
+        newQuoteCategoryElement.value = '';
 
     };
+
+
+    // 3. Create the formQuote
+
+    function createAddQuoteForm() {
+        
+        // 1. Creating the form elements
+        const formDiv = document.createElement('div');
+
+        // **CRITICAL FIX:** Assigning the newly created elements to the GLOBAL variables.
+
+
+        newQuoteTextElement = document.createElement('input');
+        newQuoteTextElement.placeholder = "Write your quote here";
+
+        newQuoteCategoryElement = document.createElement('input');
+        newQuoteCategoryElement.placeholder = "Write the quote category";
+
+        const btn = document.createElement('button');
+        btn.textContent = 'Add Quote';
+
+        btn.addEventListener('click', addQuote);
+
+        // appending these elements
+        formDiv.appendChild(newQuoteTextElement);
+        formDiv.appendChild(newQuoteCategoryElement);
+        formDiv.appendChild(btn)
+
+        formContainer.appendChild(formDiv);
+    }
+    // INITIALIZATION
+     // Setup listener for the main button
+     showQuoteBtn.addEventListener('click', showRandomQuote);
+     
+     // **MANDATORY FIXES:** Initialize the application
+     createAddQuoteForm(); // Builds the form on load
+     showRandomQuote();    // Shows the first quote on load

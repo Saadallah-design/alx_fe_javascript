@@ -10,14 +10,24 @@
     let newQuoteCategoryElement; // Renamed to avoid confusion with the value
 
     // array of quotes as object
-    const quotes = [ 
+    let quotes = JSON.parse(localStorage.getItem('userAddedQuotes')) || [ 
     { text: "The only way to do great work is to love what you do.", category: "Inspiration" },
     { text: "Life is what happens when you're busy making other plans.", category: "Life" },
     { text: "The only place where success comes before work is in the dictionary.", category: "Work Ethic"},
     { text: "Success is the sum of small efforts, repeated day in and day out.", category: "Persistence"},
-    { text: "Perseverance is the hard work you do after you get tired of doing the hard work you already did.", category: "Perseverance"},
+    { text: "Greatness is the sum of small efforts, repeated day in and day out.", category: "Greatness"},
     { text: "The best way to predict the future is to create it.", category: "Vision & Action"},
-    ];        
+    ];     
+
+    let ExistingQuotes = quotes;
+
+    // setting quotes array in local storage inside 
+    // if new quotes were added locally add them and preview them
+    const storedUserQuotes = localStorage.getItem('allUsersQuotes');
+    if (storedUserQuotes != null && ExistingQuotes != null) {
+        quotes = JSON.parse(storedUserQuotes);
+    }
+    
     // show random quote function
     function showRandomQuote(){
         // 
@@ -49,10 +59,10 @@
         // **CRITICAL:** Use local variables to store the STRING value. 
         // Read from the global element references (newQuoteTextElement).
 
-        const userQuoteText = newQuoteTextElement.value.trim();;
-        const userQuoteCat = newQuoteCategoryElement.value.trim();;
+        const userQuoteText = newQuoteTextElement.value.trim();
+        const userQuoteCat = newQuoteCategoryElement.value.trim();
 
-        // 1.1 making sure the input is not empty
+        // 1.1 making sure the input is not empty`
         if ( userQuoteText === '' || userQuoteCat === '') {
             alert('Add a quote to display. Make sure to add both text and category!');
             return;
@@ -72,6 +82,11 @@
         
         // 4. pushing the new added quote into the quotes array
         quotes.push(newQuoteObject);
+
+        // Using local storage
+        // stringify the quotes array to be used later
+        const userAddedQuotes = JSON.stringify(quotes);
+        localStorage.setItem('allUsersQuotes', userAddedQuotes);
 
         // 5. cleaning the input fields
         newQuoteTextElement.value = '';

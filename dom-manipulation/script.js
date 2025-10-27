@@ -1,5 +1,7 @@
 
 // <!-- JS CODE BELOW -->
+document.addEventListener('DOMContentLoaded', function() {
+
     const quoteDisplayer = document.getElementById('quoteDisplay');
     const showQuoteBtn = document.getElementById('newQuote');
     const formContainer = document.getElementById('formContainer')
@@ -10,7 +12,8 @@
     let newQuoteCategoryElement; // Renamed to avoid confusion with the value
 
     // array of quotes as object
-    let quotes = JSON.parse(localStorage.getItem('userAddedQuotes')) || [ 
+    // Seed Data
+    let DEFAULT_QUOTES = [ 
     { text: "The only way to do great work is to love what you do.", category: "Inspiration" },
     { text: "Life is what happens when you're busy making other plans.", category: "Life" },
     { text: "The only place where success comes before work is in the dictionary.", category: "Work Ethic"},
@@ -19,14 +22,15 @@
     { text: "The best way to predict the future is to create it.", category: "Vision & Action"},
     ];     
 
-    let ExistingQuotes = quotes;
+    const storedQuotesString = localStorage.getItem('allUsersQuotes');
 
-    // setting quotes array in local storage inside 
-    // if new quotes were added locally add them and preview them
-    const storedUserQuotes = localStorage.getItem('allUsersQuotes');
-    if (storedUserQuotes != null && ExistingQuotes != null) {
-        quotes = JSON.parse(storedUserQuotes);
+    // checking if local storage is empty
+    if(storedQuotesString === null) {
+        localStorage.setItem('allUsersQuotes', JSON.stringify(DEFAULT_QUOTES));
     }
+    let quotes = JSON.parse(localStorage.getItem('allUsersQuotes'));
+
+
     
     // show random quote function
     function showRandomQuote(){
@@ -130,3 +134,7 @@
      // **MANDATORY FIXES:** Initialize the application
      createAddQuoteForm(); // Builds the form on load
      showRandomQuote();    // Shows the first quote on load
+
+
+
+    });

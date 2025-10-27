@@ -127,6 +127,82 @@ document.addEventListener('DOMContentLoaded', function() {
 
         formContainer.appendChild(formDiv);
     }
+
+    // Download link
+    const exportQuotesBtn = document.getElementById('exportQuotesBtn');
+    exportQuotesBtn.addEventListener('click', () => {
+
+        // 
+        const quotesStringified = JSON.stringify(quotes, null, 2);
+        const blob = new Blob ([quotesStringified], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+
+        // we cant directly assing the URL to the button, so we secretly create a temp <a> anchor/link
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'user_quotes.json'; // the filename for the download
+        a.click();
+
+        
+        // 6. Clean up: Revoke the temporary URL to free up browser memory
+        URL.revokeObjectURL(url);
+        console.log(`Export button clicked! and the url is: ${url}`);
+        
+    })
+
+
+    const importQuotesBtn = document.getElementById('importQuotesBtn');
+    const importFileInput = document.getElementById('importFile');
+
+    function importFromJsonFile(event) {
+        // check is any files were selected 
+        const file = event.target.files[0];
+        if (!file){
+            return; // Safe guard if the User cancelled file selection
+        }
+
+        const fileReader = new FileReader();
+        // fire this function once the file has been successfuly read
+        fileReader.onload = function(event) {
+            const fileContent = event.target.result;
+
+        try {
+            // 1. parse the JSON string back into js array or object
+            const importedQuotes = JSON.parse(fileContent);
+
+            // 2. validation check if null
+            if(!Array.isArray(importedQuotes)) {
+                alert('Import Failed: File content is not valid quotes array.');
+                return;
+            }
+
+            // 3. merge the imported quotes
+            quotes.push(...importedQuotes);
+
+            // 4. update local storage
+            localStorage.setItem('allUsersQuotes', JSON.stringify(quotes));
+
+            // 5. update the display
+            showRandomQuote();          
+            alert('Quotes imported successfully!');
+
+        } catch (err) {
+            alert('Impprting files failed', err.message);
+            console.log('Importing file failed because: ', err.message);
+        }
+    };
+    fileReader.readAsText(file);
+    }
+
+    // clicking the buttons
+    importQuotesBtn.addEventListener('click', () => {
+        importFileInput.click();
+    });
+    // the actual file reading happens when the file input changes
+    importFileInput.addEventListener('change', importFromJsonFile);
+        
+
+
     // INITIALIZATION
      // Setup listener for the main button
      showQuoteBtn.addEventListener('click', showRandomQuote);

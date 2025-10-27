@@ -9,6 +9,11 @@
     <h1>Dynamic Quote Generator</h1>
     <div id="quoteDisplay"></div>
     <button id="newQuote">Show New Quote</button>
+         <!-- Add category filter -->
+         <select id="categoryFilter" onchange="filterQuotes()">
+          <option value="all">All Categories</option>
+          <!-- Dynamically populated categories -->
+         </select>
 
     <!-- Adding quotes by the user -->
     <div id="formContainer">
@@ -23,6 +28,16 @@
       <input type="file" id="importFile" accept=".json" style="display: none;" />
       <button id="importQuotesBtn" style="background-color: goldenrod;"> Import Quotes</button>
      </div>
+
+
+
+     <!-- <div>
+      <button id="syncDataBtn">Sync With Server (Server Wins)</button>
+      <div id="syncNotification" style="padding: 10px; margin-top: 15px; border: 1px solid #ccc; min-height: 20px; background-color: #f8f9fa;">
+      Sync Status: Ready.
+      </div> 
+     </div> -->
+ 
 
       <script src="script.js"></script>
   </body>

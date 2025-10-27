@@ -22,6 +22,11 @@ document.addEventListener('DOMContentLoaded', function() {
     { text: "The best way to predict the future is to create it.", category: "Vision & Action"},
     ];     
 
+    const SERVER_QUOTES = [
+        { text: "Server Quote A: This data comes from the server.", category: "Server" },
+        { text: "Server Quote B: Server's data takes precedence in a conflict.", category: "Precedence" }
+    ]
+
     const storedQuotesString = localStorage.getItem('allUsersQuotes');
 
     // checking if local storage is empty
@@ -95,6 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 5. cleaning the input fields
         newQuoteTextElement.value = '';
         newQuoteCategoryElement.value = '';
+        populateCategories();
 
     };
 
@@ -202,14 +208,91 @@ document.addEventListener('DOMContentLoaded', function() {
     importFileInput.addEventListener('change', importFromJsonFile);
         
 
+    // SERVER SYNCING AND CONFLICT RESOLUTION
+    // STEP 1: simulating server data. STEP 2: create sync func. STEP 3: add necessary UI
+
+    // FOR STEP 1, I have added a new const SERVER_QUOTES at the top below the default quotes
+
+
+    // Populate Categories Dynamically
+    const categoryFilter = document.getElementById('categoryFilter');
+
+    function populateCategories(){
+        // 1. EXTRACT: Get an array of all category strings (including duplicates)
+        const allCategories = quotes.map(quote => quote.category);
+
+        // 2. UNIQUE: Use a Set to automatically get rid of duplicates
+        const uniqueCategoriesSet = new Set(allCategories);
+
+        // 3. ARRAY: Convert the Set back into an array
+        const uniqueCategories = [...uniqueCategoriesSet];
+
+        // 4 LOOP through uniqCategories and creat <option> elemet
+        uniqueCategories.forEach(categoryString => {
+            const optionElemenet = document.createElement('option');
+            optionElemenet.value = categoryString;
+            optionElemenet.textContent = categoryString;
+            categoryFilter.append(optionElemenet);
+        });
+        // Get the last saved filter from local storage (defaults to 'all')
+    const lastFilter = localStorage.getItem('lastCategoryFilter') || 'all';
+
+    // Set the dropdown value to the saved filter
+    categoryFilter.value = lastFilter;
+
+    // Trigger the filtering and display based on the restored filter
+    filterQuotes();
+
+    };
+
+    // Filtering with Categories
+    function filterQuotes(){
+        // 1. Get the selected category value
+    const selectedCategory = categoryFilter.value;
+
+    // 2. Persist the choice to Local Storage (MANDATORY STEP)
+    // Use localStorage.setItem() here
+    // YOUR CODE HERE
+    localStorage.setItem('lastCategoryFilter', selectedCategory);
+
+    let filteredQuotes;
+
+    // 3. Filtering Logic (Handle 'all' vs. specific category)
+    if (selectedCategory === 'all') {
+        filteredQuotes = quotes; // Use the entire array
+    } else {
+        // Use the Array.prototype.filter() method
+        // YOUR CODE HERE
+        filteredQuotes = quotes.filter(quote => quote.category === selectedCategory);
+    }
+
+    // 4. Check if the filtered array is empty
+    if (filteredQuotes.length === 0) {
+        // Display a message if no quotes match the filter
+        quoteDisplayer.innerHTML = `<p>No quotes available in the category: ${selectedCategory}.</p>`;
+        return;
+    }
+    
+    // 5. Display a random quote from the filtered list
+    const quoteIndex = Math.floor(Math.random() * filteredQuotes.length);
+    const selectedQuote = filteredQuotes[quoteIndex];
+
+    // Update the innerHTML of the quoteDisplayer
+    quoteDisplayer.innerHTML = 
+        `<p class="quote-text">"${selectedQuote.text}"</p>
+        <span class="quote-category">Category: ${selectedQuote.category}</span>`;
+
+    };
+
 
     // INITIALIZATION
      // Setup listener for the main button
-     showQuoteBtn.addEventListener('click', showRandomQuote);
+     showQuoteBtn.addEventListener('click', filterQuotes);
      
      // **MANDATORY FIXES:** Initialize the application
      createAddQuoteForm(); // Builds the form on load
      showRandomQuote();    // Shows the first quote on load
+     populateCategories();
 
 
 

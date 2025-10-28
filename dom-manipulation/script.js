@@ -1,19 +1,22 @@
 
-// <!-- JS CODE BELOW -->
 document.addEventListener('DOMContentLoaded', function() {
 
     const quoteDisplayer = document.getElementById('quoteDisplay');
     const showQuoteBtn = document.getElementById('newQuote');
-    const formContainer = document.getElementById('formContainer')
 
+    const newQuoteTextElement = document.getElementById('newQuoteText'); 
+    const newQuoteCategoryElement = document.getElementById('newQuoteCategory'); 
 
-    // **CRITICAL FIX:** Global variables to hold the DYNAMICALLY CREATED input elements.
-    let newQuoteTextElement; // Renamed to avoid confusion with the value
-    let newQuoteCategoryElement; // Renamed to avoid confusion with the value
+    const importQuotesBtn = document.getElementById('importQuotesBtn');
+    const importFileInput = document.getElementById('importFile');
 
-    // array of quotes as object
-    // Seed Data
-    let DEFAULT_QUOTES = [ 
+    const exportQuotesBtn = document.getElementById('exportQuotesBtn');
+
+    // get the stored quotes under the key allUserQuotes
+    const storedQuotesString = localStorage.getItem('allUsersQuotes');
+
+    // Seed data - used only when localStorage is empty on first load
+let DEFAULT_QUOTES = [ 
     { text: "The only way to do great work is to love what you do.", category: "Inspiration" },
     { text: "Life is what happens when you're busy making other plans.", category: "Life" },
     { text: "The only place where success comes before work is in the dictionary.", category: "Work Ethic"},
@@ -22,12 +25,11 @@ document.addEventListener('DOMContentLoaded', function() {
     { text: "The best way to predict the future is to create it.", category: "Vision & Action"},
     ];     
 
+    // TODO: Server sync not yet implemented - these quotes are currently unused
     const SERVER_QUOTES = [
         { text: "Server Quote A: This data comes from the server.", category: "Server" },
         { text: "Server Quote B: Server's data takes precedence in a conflict.", category: "Precedence" }
     ]
-
-    const storedQuotesString = localStorage.getItem('allUsersQuotes');
 
     // checking if local storage is empty
     if(storedQuotesString === null) {
@@ -35,38 +37,30 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     let quotes = JSON.parse(localStorage.getItem('allUsersQuotes'));
 
-
+    function displayQuote(quoteObject) {
+        // 1. Get the quote displayer element (ensure it's accessible or passed in)
+        // const quoteDisplayer = document.getElementById('quoteDisplay'); 
     
-    // show random quote function
-    function showRandomQuote(){
-        // 
-        if (quotes.length === 0) {
-            quoteDisplayer.innerHTML = '<p>No quotes available. Add one!</p>';
+        // 2. Handle the "no quote" case
+        if (!quoteObject || !quoteObject.text) {
+            quoteDisplayer.innerHTML = '<p>No quotes available based on current selection.</p>';
             return;
         }
-
-        // 1. Calculate a NEW random index every time the function runs
-        let quoteIndex = Math.floor(Math.random() * quotes.length);
-
-        // 2. Select the corresponding quote object
-        let selectedQuote = quotes[quoteIndex];
-
-         // 3. Update the innerHTML with the specific text and category
-            // We use the object properties: selectedQuote.text and selectedQuote.category
-            quoteDisplayer.innerHTML = 
-            `<p class="quote-text">"${selectedQuote.text}"</p>
-            <span class="quote-category">Category: ${selectedQuote.category}</span>`;
-            
-        // quoteDisplayer.innerHTML = `<div> ${quotes.text} <span> ${quotes.category}</span> </div>`;
-        
+    
+        // 3. Display the quote
+        quoteDisplayer.innerHTML = 
+            `<p class="quote-text">"${quoteObject.text}"</p>
+            <span class="quote-category">Category: ${quoteObject.category}</span>`;
+    }
+    
+    function showRandomQuote(){
+        // This calls filterQuotes(), which reads the current filter and displays a random quote.
+        filterQuotes();
     };
 
-    // ---------------------------------------------
-
     function addQuote() {
-        // 1. getting the value the user put into the form and store them in vars
         // **CRITICAL:** Use local variables to store the STRING value. 
-        // Read from the global element references (newQuoteTextElement).
+        // Read from the global element references (newQuoteTextElement) See Lines 11 - 12.
 
         const userQuoteText = newQuoteTextElement.value.trim();
         const userQuoteCat = newQuoteCategoryElement.value.trim();
@@ -83,11 +77,10 @@ document.addEventListener('DOMContentLoaded', function() {
         category: userQuoteCat
         };
 
-        // 3. updating the inner html
-        quoteDisplayer.innerHTML = 
-            `<p class="quote-text">"${userQuoteText}"</p>
-            <span class="quote-category">Category: ${userQuoteCat}</span>`;
+        // 3. Instead of updating the quoteDisplayer.innerHTML 
+        // now I will just call the helper function displayquote
 
+        displayQuote(newQuoteObject);
         
         // 4. pushing the new added quote into the quotes array
         quotes.push(newQuoteObject);
@@ -104,38 +97,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     };
 
-
-    // 3. Create the formQuote
-
-    function createAddQuoteForm() {
-        
-        // 1. Creating the form elements
-        const formDiv = document.createElement('div');
-
-        // **CRITICAL FIX:** Assigning the newly created elements to the GLOBAL variables.
-
-
-        newQuoteTextElement = document.createElement('input');
-        newQuoteTextElement.placeholder = "Write your quote here";
-
-        newQuoteCategoryElement = document.createElement('input');
-        newQuoteCategoryElement.placeholder = "Write the quote category";
-
-        const btn = document.createElement('button');
-        btn.textContent = 'Add Quote';
-
-        btn.addEventListener('click', addQuote);
-
-        // appending these elements
-        formDiv.appendChild(newQuoteTextElement);
-        formDiv.appendChild(newQuoteCategoryElement);
-        formDiv.appendChild(btn)
-
-        formContainer.appendChild(formDiv);
-    }
-
-    // Download link
-    const exportQuotesBtn = document.getElementById('exportQuotesBtn');
     exportQuotesBtn.addEventListener('click', () => {
 
         // 
@@ -156,10 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
     })
 
-
-    const importQuotesBtn = document.getElementById('importQuotesBtn');
-    const importFileInput = document.getElementById('importFile');
-
+    // Merge imported quotes (duplicates allowed - consider deduplication in future)
     function importFromJsonFile(event) {
         // check is any files were selected 
         const file = event.target.files[0];
@@ -193,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Quotes imported successfully!');
 
         } catch (err) {
-            alert('Impprting files failed', err.message);
+            alert('Importing files failed', err.message);
             console.log('Importing file failed because: ', err.message);
         }
     };
@@ -206,13 +164,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     // the actual file reading happens when the file input changes
     importFileInput.addEventListener('change', importFromJsonFile);
-        
-
-    // SERVER SYNCING AND CONFLICT RESOLUTION
-    // STEP 1: simulating server data. STEP 2: create sync func. STEP 3: add necessary UI
-
-    // FOR STEP 1, I have added a new const SERVER_QUOTES at the top below the default quotes
-
 
     // Populate Categories Dynamically
     const categoryFilter = document.getElementById('categoryFilter');
@@ -222,6 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const allCategories = quotes.map(quote => quote.category);
 
         // 2. UNIQUE: Use a Set to automatically get rid of duplicates
+        // Extract unique categories for filter dropdown (removes duplicates via Set)
         const uniqueCategoriesSet = new Set(allCategories);
 
         // 3. ARRAY: Convert the Set back into an array
@@ -243,16 +195,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Trigger the filtering and display based on the restored filter
     filterQuotes();
 
-    };
+    }
 
-    // Filtering with Categories
+    // Filter and display quotes based on selected category (persists selection to localStorage)
     function filterQuotes(){
         // 1. Get the selected category value
     const selectedCategory = categoryFilter.value;
 
     // 2. Persist the choice to Local Storage (MANDATORY STEP)
     // Use localStorage.setItem() here
-    // YOUR CODE HERE
     localStorage.setItem('lastCategoryFilter', selectedCategory);
 
     let filteredQuotes;
@@ -269,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 4. Check if the filtered array is empty
     if (filteredQuotes.length === 0) {
         // Display a message if no quotes match the filter
-        quoteDisplayer.innerHTML = `<p>No quotes available in the category: ${selectedCategory}.</p>`;
+        displayQuote(null); // using the helper
         return;
     }
     
@@ -277,23 +228,119 @@ document.addEventListener('DOMContentLoaded', function() {
     const quoteIndex = Math.floor(Math.random() * filteredQuotes.length);
     const selectedQuote = filteredQuotes[quoteIndex];
 
-    // Update the innerHTML of the quoteDisplayer
-    quoteDisplayer.innerHTML = 
-        `<p class="quote-text">"${selectedQuote.text}"</p>
-        <span class="quote-category">Category: ${selectedQuote.category}</span>`;
+    // Update the innerHTML of the quoteDisplayer: this was duplicate twice
+    // So now I will just call the helper function displayQuote()
+    displayQuote(selectedQuote);
+}
 
-    };
+    // ====================================================
+    // Function 1: Simulate fetching quotes from server
+function fetchQuotesFromServer() {
+    // This simulates getting data from a server
+    // For now, just return your SERVER_QUOTES array
+    
+    // In a real app, this would be:
+    // return fetch('https://api.example.com/quotes').then(...)
+    
+    return SERVER_QUOTES; // Return the "server" data
+}
 
+// Function 2: Main sync logic
+function syncQuotes() {
+    // Step 1: Fetch server data
+    const serverQuotes = fetchQuotesFromServer();
+    
+    // Step 2: Get local data
+    const localQuotes = quotes;
+    
+    // Step 3: Track changes for notification
+    let conflictsResolved = 0;
+    let newQuotesAdded = 0;
+    
+    // Step 4: Loop through server quotes
+    serverQuotes.forEach(serverQuote => {
+        
+        // Check if this server quote exists locally
+        const existingQuote = localQuotes.find(localQ => {
+            return localQ.text === serverQuote.text;
+        });
+        
+        if (existingQuote) {
+            // Quote exists! Check for conflict
+            if (existingQuote.category !== serverQuote.category) {
+                // CONFLICT! Server wins
+                const index = localQuotes.findIndex(q => q.text === serverQuote.text);
+                localQuotes[index] = serverQuote;
+                conflictsResolved++;
+            }
+        } else {
+            // New quote from server - add it
+            localQuotes.push(serverQuote);
+            newQuotesAdded++;
+        }
+    });
+    
+    // Step 5: Save to localStorage
+    localStorage.setItem('allUsersQuotes', JSON.stringify(localQuotes));
+    
+    // Step 6: Update display
+    showRandomQuote();
+    populateCategories();
+    
+    // Step 7: Show notification
+    showSyncNotification(newQuotesAdded, conflictsResolved);
+}
+
+// Function 3: UI notification (the autochecker needs this)
+function showSyncNotification(newQuotes, conflicts) {
+    const notification = document.getElementById('syncNotification');
+    
+    if (!notification) {
+        console.error('Notification element not found!');
+        return;
+    }
+    
+    // Build the message
+    let message = 'Sync complete! ';
+    
+    if (newQuotes > 0) {
+        message += `Added ${newQuotes} new quote(s). `;
+    }
+    
+    if (conflicts > 0) {
+        message += `Resolved ${conflicts} conflict(s) (server data used).`;
+    }
+    
+    if (newQuotes === 0 && conflicts === 0) {
+        message = 'Sync complete! No changes needed.';
+    }
+    
+    notification.textContent = message;
+    notification.style.backgroundColor = '#d4edda'; // Green background
+    notification.style.color = '#155724';
+}
+
+
+    // ##########
+    // Manual sync button
+const syncBtn = document.getElementById('syncDataBtn');
+syncBtn.addEventListener('click', syncQuotes); // Call syncQuotes
+
+// Automatic periodic sync (every 30 seconds)
+setInterval(syncQuotes, 30000);
+
+// Expose for potential inline handlers (if needed)
+window.syncQuotes = syncQuotes;
+
+    // ====================================================
 
     // INITIALIZATION
-     // Setup listener for the main button
-     showQuoteBtn.addEventListener('click', filterQuotes);
+     showQuoteBtn.addEventListener('click', showRandomQuote); // changed from calling filter to showRandomQuote()
      
-     // **MANDATORY FIXES:** Initialize the application
-     createAddQuoteForm(); // Builds the form on load
-     showRandomQuote();    // Shows the first quote on load
+     showRandomQuote();    // Calls showRandomQuote(), which calls filterQuotes()
      populateCategories();
 
-
-
+     // Make them global for HTML handlers
+    window.addQuote = addQuote;
+    window.filterQuotes = filterQuotes;
     });

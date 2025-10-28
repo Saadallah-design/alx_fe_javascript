@@ -295,6 +295,9 @@ async function syncQuotes() {
     
     // Step 5: Save to localStorage
     localStorage.setItem('allUsersQuotes', JSON.stringify(localQuotes));
+
+    // Step 5.1 POST updated quotes back to server
+    await postQuotesToServer(localQuotes);
     
     // Step 6: Update display
     showRandomQuote();
@@ -333,7 +336,26 @@ function showSyncNotification(newQuotes, conflicts) {
     notification.style.color = '#155724';
 }
 
-
+// Function to POST quotes to server
+async function postQuotesToServer(quotesToPost) {
+    try {
+        const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(quotesToPost)
+        });
+        
+        const result = await response.json();
+        console.log('Successfully posted to server:', result);
+        return result;
+        
+    } catch (error) {
+        console.error('Error posting to server:', error);
+        return null;
+    }
+}
     // ##########
     // Manual sync button
 const syncBtn = document.getElementById('syncDataBtn');

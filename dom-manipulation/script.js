@@ -317,7 +317,7 @@ function showSyncNotification(newQuotes, conflicts) {
     }
     
     // Build the message
-    let message = 'Sync complete! ';
+    let message = 'Quotes synced with server!';
     
     if (newQuotes > 0) {
         message += `Added ${newQuotes} new quote(s). `;

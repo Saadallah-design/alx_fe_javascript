@@ -235,46 +235,59 @@ let DEFAULT_QUOTES = [
 
     // ====================================================
     // Function 1: Simulate fetching quotes from server
-function fetchQuotesFromServer() {
-    // This simulates getting data from a server
-    // For now, just return your SERVER_QUOTES array
-    
-    // In a real app, this would be:
-    // return fetch('https://api.example.com/quotes').then(...)
-    
-    return SERVER_QUOTES; // Return the "server" data
-}
+    async function fetchQuotesFromServer() {
+        try {
+            // Fetch from JSONPlaceholder (mock API)
+            const response = await fetch('https://jsonplaceholder.typicode.com/posts');
+            const posts = await response.json();
+            
+            // Transform the posts data into quote format
+            // JSONPlaceholder returns posts with: id, userId, title, body
+            // We need to convert them to: text, category
+            
+            const serverQuotes = posts.slice(0, 5).map(post => {
+                return {
+                    text: post.title, // Use post title as quote text
+                    category: "Server" // Give them all "Server" category
+                };
+            });
+            
+            return serverQuotes;
+            
+        } catch (error) {
+            console.error('Error fetching from server:', error);
+            // Fallback to SERVER_QUOTES if fetch fails
+            return SERVER_QUOTES;
+        }
+    }
 
 // Function 2: Main sync logic
-function syncQuotes() {
-    // Step 1: Fetch server data
-    const serverQuotes = fetchQuotesFromServer();
+async function syncQuotes() {
+    // Step 1: Fetch server data (now with await!)
+    const serverQuotes = await fetchQuotesFromServer();
     
     // Step 2: Get local data
     const localQuotes = quotes;
     
-    // Step 3: Track changes for notification
+    // Step 3: Track changes
     let conflictsResolved = 0;
     let newQuotesAdded = 0;
     
     // Step 4: Loop through server quotes
     serverQuotes.forEach(serverQuote => {
-        
-        // Check if this server quote exists locally
         const existingQuote = localQuotes.find(localQ => {
             return localQ.text === serverQuote.text;
         });
         
         if (existingQuote) {
-            // Quote exists! Check for conflict
+            // Conflict check
             if (existingQuote.category !== serverQuote.category) {
-                // CONFLICT! Server wins
                 const index = localQuotes.findIndex(q => q.text === serverQuote.text);
                 localQuotes[index] = serverQuote;
                 conflictsResolved++;
             }
         } else {
-            // New quote from server - add it
+            // New quote
             localQuotes.push(serverQuote);
             newQuotesAdded++;
         }
@@ -287,7 +300,7 @@ function syncQuotes() {
     showRandomQuote();
     populateCategories();
     
-    // Step 7: Show notification
+    // Step 7: Notification
     showSyncNotification(newQuotesAdded, conflictsResolved);
 }
 
